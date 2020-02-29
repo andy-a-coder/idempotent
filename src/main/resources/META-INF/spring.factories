@@ -1,0 +1,5 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.andy.idempotent.annotation.IdempotentInterceptor,\
+com.andy.idempotent.lock.RedisDistributedLockServiceImpl,\
+com.andy.idempotent.service.IdempotentServiceImpl,\
+com.andy.idempotent.configuration.IdempotentMapperScan
