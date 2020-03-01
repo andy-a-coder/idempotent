@@ -72,7 +72,7 @@ mvn clean install -U -DskipTests
 ### 2）在自己的项目中添加maven依赖
 ```
         <dependency>
-            <groupId>com.andy.idempotent</groupId>
+            <groupId>com.github.andy-a-coder.idempotent</groupId>
             <artifactId>idempotent</artifactId>
             <version>1.0.0</version>
         </dependency>
