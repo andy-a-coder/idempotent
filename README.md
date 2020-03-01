@@ -1,9 +1,9 @@
 # 幂等组件 - idempotent
 * 在软件开发中，重复提交、重复通知、补偿交易防重等场景的问题都属于需要处理的幂等问题；
 * 一个幂等操作的特点，是任意多次执行所产生的影响均与一次执行的影响相同。重复执行不会影响系统状态，也不用担心会对系统数据造成破坏；
-* 本组件就是为了解决这些问题而开发的，简单易用。支持幂等有效期设置、响应策略设置、幂等参数指定等特性。
+* 本组件就是为了解决这些问题而开发的，简单易用。支持 __"幂等有效期设置"__ 、__"响应策略设置"__ 、__"幂等参数指定"__ 等特性。
 
-## 1、使用方式（注解引用,非常方便）
+## 1、代码中的使用方式（通过注解使用）
 通过在方法上添加@Idempotent注解来使用组件的功能
 ### 1）注解的几个简便使用示例
 ```
@@ -65,11 +65,7 @@ idempotentParamOnly：请求参数是否只记录幂等字段（true/false, 默�
 
 ```
 ## 2、集成方式
-### 1）下载源码，使用以下maven命令将组件打包install到本地仓库
-```
-mvn clean install -U -DskipTests
-```
-### 2）在自己的项目中添加maven依赖
+### 1）在自己的项目中添加maven依赖
 ```
         <dependency>
             <groupId>com.github.andy-a-coder</groupId>
@@ -78,7 +74,7 @@ mvn clean install -U -DskipTests
         </dependency>
 
 ```
-### 3）yaml配置
+### 2）yaml配置
 本组件依赖mysql、redis、mybatis，按spring-boot的要求在自己的项目中配置即可
 
 以下是配置示例
@@ -111,7 +107,7 @@ mybatis:
     
 ```
 
-### 4）创建幂等记录存储表（脚本见: /src/main/resources/idempotent.sql）
+### 3）创建幂等记录存储表（脚本见: /src/main/resources/idempotent.sql）
 
 
 
