@@ -4,7 +4,8 @@
 * 本组件就是为了解决这些问题而开发的，简单易用。支持 __"幂等有效期设置"__ 、__"响应策略设置"__ 、__"幂等参数指定"__ 等特性。
 
 ## 1、代码中的使用方式（通过注解使用）
-通过在方法上添加@Idempotent注解来使用组件的功能
+* 通过在方法上添加@Idempotent注解来使用组件的功能，示例如下，(更多完整示例参见：[https://github.com/andy-a-coder/idempotent-sample](https://github.com/andy-a-coder/idempotent-sample))
+
 ### 1）注解的几个简便使用示例
 ```
     @Idempotent
