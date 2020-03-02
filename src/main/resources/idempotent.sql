@@ -13,3 +13,4 @@ CREATE TABLE `idempotent_request` (
   PRIMARY KEY (`id`),
   KEY `idx_sign` (`sign`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

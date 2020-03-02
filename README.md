@@ -111,4 +111,3 @@ mybatis:
 ### 3）创建幂等记录存储表（脚本见: /src/main/resources/idempotent.sql）
 
 
-
