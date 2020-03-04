@@ -110,5 +110,6 @@ mybatis:
 
 ### 3）创建幂等记录存储表（脚本见: /src/main/resources/idempotent.sql）
 
-## 3、幂等请求的处理流程图
+## 3、幂等请求的处理流程图(flow.png)
+
 ![](https://github.com/andy-a-coder/idempotent/blob/master/flow.png?raw=true)
