@@ -11,6 +11,7 @@ CREATE TABLE `idempotent_request` (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_sign` (`sign`)
+  KEY `idx_sign` (`sign`),
+  KEY `idx_valid_end_time` (`valid_end_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
