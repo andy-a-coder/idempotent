@@ -71,7 +71,7 @@ idempotentParamOnly：请求参数是否只记录幂等字段（true/false, 默�
         <dependency>
             <groupId>com.github.andy-a-coder</groupId>
             <artifactId>idempotent</artifactId>
-            <version>2.0.0</version>
+            <version>2.0.2</version>
         </dependency>
 
 ```

@@ -144,8 +144,8 @@ public class IdempotentServiceImpl implements IdempotentService {
                         // 更新请求状态为“成功”
                         if (idempotentRequest.getId() != null) {
                             idempotentRequest.setResponse(JSON.toJSONString(result));
-                            idempotentRequest.setStatus(IdempotentRequest.STATUS_SUCCESS);
                             idempotentRequestMapper.updateRequestResult(idempotentRequest.getId(), idempotentRequest.getStatus(), IdempotentRequest.STATUS_SUCCESS, idempotentRequest.getResponse());
+                            idempotentRequest.setStatus(IdempotentRequest.STATUS_SUCCESS);
                             // 将成功的请求记录放入redis
                             redisStringOps.set(String.format(IDEMPOTENT_REDIS_KEY, sign), JSON.toJSONString(idempotentRequest), getRedisIdempotentSeconds(context.getIdempotentMinutes()), TimeUnit.SECONDS);
                         }
