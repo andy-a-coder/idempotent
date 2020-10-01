@@ -4,6 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.andy.idempotent.error.CommonErrorEnum;
 import com.andy.idempotent.error.IdempotentException;
 import com.andy.idempotent.lock.DistributedLockService;
@@ -51,6 +54,12 @@ public class IdempotentServiceImpl implements IdempotentService {
 
     // redis的幂等默认缓存有效期1天（如果业务设置的幂等有效期比这个小，使用业务的）
     public static final Integer DEFAULT_IDEMPOTENT_MINUTES = 60 * 24;
+    
+    // BizColumn列的长度阀值，超过这个长度丢弃一部分
+    public static final Integer BIZ_COLUMN_LENGTH_THRESHOLD  =  512;
+    
+    // requestParam列的长度阀值，超过这个长度丢弃一部分
+    public static final Integer REQUEST_PARAM_LENGTH_THRESHOLD  = 2048;
 
     @Autowired
     private IdempotentRequestMapper idempotentRequestMapper;
@@ -108,10 +117,10 @@ public class IdempotentServiceImpl implements IdempotentService {
                         // 不存在或者上次请求失败，就直接插入请求记录，并调用业务方法
                         try {
                             idempotentRequest = new IdempotentRequest();
-                            idempotentRequest.setBizColumnValues(context.getBizColumnValues());
+                            idempotentRequest.setBizColumnValues(getValidBizColumnsValues(context.getBizColumnValues()));
                             idempotentRequest.setPrjName(context.getPrjName());
                             idempotentRequest.setInterfaceName(context.getInterfaceName());
-                            idempotentRequest.setRequestParam(context.getRequestParam());
+                            idempotentRequest.setRequestParam(getValidRequestParam(context.getRequestParam()));
                             idempotentRequest.setSign(sign);
                             idempotentRequest.setStatus(IdempotentRequest.STATUS_NEW);
                             if (context.getIdempotentMinutes() != null && context.getIdempotentMinutes() > 0)
@@ -157,6 +166,27 @@ public class IdempotentServiceImpl implements IdempotentService {
                 }
             }
         });
+    }
+
+    protected Map<String, Object> getValidRequestParam(Map<String, Object> requestParam) {
+        if(requestParam == null)
+            return null;
+        String reqeustParamJson = JSON.toJSONString(requestParam);
+        if(reqeustParamJson.length() > REQUEST_PARAM_LENGTH_THRESHOLD) {
+            Map<String,Object> trimedParams  = new HashMap<String, Object>();
+            trimedParams.put("trimmedValue", reqeustParamJson.substring(0, 64));
+            return trimedParams;
+        }
+        return requestParam;
+    }
+
+    protected String getValidBizColumnsValues(String bizColumnValues) {
+        if(!StringUtils.isBlank(bizColumnValues) && bizColumnValues.length() > BIZ_COLUMN_LENGTH_THRESHOLD) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("trimmedValue", bizColumnValues.substring(0, 64));
+            return jsonObject.toJSONString();
+        }
+        return bizColumnValues;
     }
 
     private Integer getRedisIdempotentSeconds(Integer idempotentMinutes) {
