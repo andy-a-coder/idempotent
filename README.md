@@ -1,7 +1,7 @@
 # 幂等组件 - idempotent
 * 在软件开发中，重复提交、重复通知、补偿交易防重等场景的问题都属于需要处理的幂等问题；
 * 一个幂等操作的特点，是任意多次执行所产生的影响均与一次执行的影响相同。重复执行不会影响系统状态，也不用担心会对系统数据造成破坏；
-* 本组件就是为了解决这些问题而开发的，简单易用。支持 __"幂等有效期设置"__ 、__"响应策略设置"__ 、__"幂等参数指定"__ 等特性。
+* 本组件就是为了解决这些问题而开发的，简单易用。支持“幂等有效期设置”、“响应策略设置”、“幂等参数指定” 等特性。
 
 ## 1、代码中的使用方式（通过注解使用）
 * 通过在方法上添加@Idempotent注解来使用组件的功能，示例如下，(更多完整示例参见：[https://github.com/andy-a-coder/idempotent-sample](https://github.com/andy-a-coder/idempotent-sample))
@@ -92,16 +92,9 @@ spring:
     password: 123456
     driver-class-name: com.mysql.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
-    minimum-idle: 5
-    maximum-pool-size: 100
-    idle-timeout: 30000
-    max-lifetime: 1800000
-    connection-timeout: 30000
-    connection-test-query: SELECT 1
   redis:
     host: 127.0.0.1
     port: 6379
-    timeout: 5000
 mybatis:
   configuration:
     map-underscore-to-camel-case: true  # 本组件使用的mybatis注解操作的idempotent_request表，加了这个配置可以把下划线分隔的库表字段自动转换为camel格式

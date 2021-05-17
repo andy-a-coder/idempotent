@@ -17,7 +17,7 @@ public interface IdempotentService {
      * @return T 实际业务方法的返回值
      * @throws Throwable 
      */
-    public <T> T handle(IdempotentCallback<T> idempotentCallback);
+    public <T> T handle(IdempotentCallback<T> idempotentCallback) throws Throwable;
 
     /**
      * 幂等性服务回调接口

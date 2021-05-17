@@ -2,7 +2,7 @@ CREATE TABLE `idempotent_request` (
   `id` bigint(19) NOT NULL AUTO_INCREMENT,
   `prj_name` varchar(64) DEFAULT NULL,
   `interface_name` varchar(64) DEFAULT NULL,
-  `request_param` varchar(2048) DEFAULT NULL,
+  `request_param` varchar(1024) DEFAULT NULL,
   `response` varchar(2048) DEFAULT NULL,
   `biz_column_values` varchar(512) DEFAULT NULL,
   `sign` varchar(64) DEFAULT NULL,

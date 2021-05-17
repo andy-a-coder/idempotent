@@ -37,6 +37,12 @@ public class IdempotentException extends RuntimeException {
         this.errorCode = errorCode;
         this.errorMessage = errorMessage;
     }
+    
+    public IdempotentException(CommonErrorEnum errorEnum) {
+        super(errorEnum.message());
+        this.errorCode = errorEnum.code();
+        this.errorMessage = errorEnum.message();
+    }
 
     public IdempotentException(String errorMessage) {
         super(errorMessage);
@@ -55,5 +61,11 @@ public class IdempotentException extends RuntimeException {
         super(errorMessage, cause, enableSuppression, writableStackTrace);
         this.errorCode = errorCode;
         this.errorMessage = errorMessage;
+    }
+
+    public IdempotentException(CommonErrorEnum errorEnum, Throwable e) {
+        super(errorEnum.message(), e);
+        this.errorCode = errorEnum.code();
+        this.errorMessage = errorEnum.message();
     }
 }
