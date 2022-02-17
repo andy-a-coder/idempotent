@@ -16,6 +16,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,9 @@ public class IdempotentServiceImpl implements IdempotentService {
 
     @Resource(name = "stringRedisTemplate")
     private ValueOperations<String, String> redisStringOps;
+    
+    @Value("${idempontent.db-enabled:false}")
+    private boolean dbEnabled;
 
     // 幂等锁的key定义
     public static final String IDEMPOTENT_LOCK = "idempotent:prjName:%s:sign:%s";
@@ -127,7 +131,7 @@ public class IdempotentServiceImpl implements IdempotentService {
      */
     private IdempotentRequest getIdempotentRequest(IdempotentContext context, String sign) {
         IdempotentRequest idempotentRequest = getIdempotentRequestFromRedis(String.format(IDEMPOTENT_REDIS_KEY, sign));
-        if (idempotentRequest == null) {
+        if (idempotentRequest == null && dbEnabled) {
             idempotentRequest = idempotentRequestMapper.getRequestBefore(sign);
             if (idempotentRequest != null)
                 redisStringOps.set(String.format(IDEMPOTENT_REDIS_KEY, sign), JSON.toJSONString(idempotentRequest), getRedisIdempotentSeconds(context.getIdempotentMinutes()), TimeUnit.SECONDS);
@@ -139,7 +143,9 @@ public class IdempotentServiceImpl implements IdempotentService {
      * 创建幂等请求记录
      */
     private IdempotentRequest createIdempotentRequest(IdempotentContext context, String sign, IdempotentRequest idempotentRequest) {
-        if (idempotentRequest == null || IdempotentRequest.STATUS_FAIL.equals(idempotentRequest.getStatus())) {
+        if (idempotentRequest == null 
+                || IdempotentRequest.STATUS_FAIL.equals(idempotentRequest.getStatus())
+                || idempotentRequest.getValidEndTime().compareTo(new Date()) < 0) {
             // 不存在或者上次请求失败，就直接插入请求记录，并调用业务方法
             try {
                 idempotentRequest = new IdempotentRequest();
@@ -151,7 +157,8 @@ public class IdempotentServiceImpl implements IdempotentService {
                 idempotentRequest.setStatus(IdempotentRequest.STATUS_NEW);
                 if (context.getIdempotentMinutes() != null && context.getIdempotentMinutes() > 0)
                     idempotentRequest.setValidEndTime(DateUtils.addMinutes(new Date(), context.getIdempotentMinutes()));
-                idempotentRequestMapper.insert(idempotentRequest);
+                if (dbEnabled)
+                    idempotentRequestMapper.insert(idempotentRequest);
             } catch (Throwable e) {
                 log.error("####### fail when add idempotentRequest, idempotentRequest={}", idempotentRequest, e);
                 // 创建幂等记录时还没有调用业务逻辑，如果出现异常则抛出
@@ -174,7 +181,7 @@ public class IdempotentServiceImpl implements IdempotentService {
         } catch (Throwable e) {
             // 更新请求状态为“失败”
             log.warn("####### fail when execute biz method, idempotentRequest={}", idempotentRequest);
-            if (idempotentRequest.getId() != null)
+            if (dbEnabled && idempotentRequest.getId() != null)
                 idempotentRequestMapper.updateStatusByPrimaryKey(idempotentRequest.getId(), idempotentRequest.getStatus(), IdempotentRequest.STATUS_FAIL);
             throw e;
         }
@@ -187,13 +194,13 @@ public class IdempotentServiceImpl implements IdempotentService {
     private <T> void updateSuccessResult(IdempotentContext context, String sign, IdempotentRequest idempotentRequest, T result) {
         try {
             // 更新请求状态为“成功”
-            if (idempotentRequest.getId() != null) {
-                idempotentRequest.setResponse(JSON.toJSONString(result));
+            idempotentRequest.setResponse(JSON.toJSONString(result));
+            if (dbEnabled && idempotentRequest.getId() != null) {
                 idempotentRequestMapper.updateRequestResult(idempotentRequest.getId(), idempotentRequest.getStatus(), IdempotentRequest.STATUS_SUCCESS, idempotentRequest.getResponse());
-                idempotentRequest.setStatus(IdempotentRequest.STATUS_SUCCESS);
-                // 将成功的请求记录放入redis
-                redisStringOps.set(String.format(IDEMPOTENT_REDIS_KEY, sign), JSON.toJSONString(idempotentRequest), getRedisIdempotentSeconds(context.getIdempotentMinutes()), TimeUnit.SECONDS);
             }
+            idempotentRequest.setStatus(IdempotentRequest.STATUS_SUCCESS);
+            // 将成功的请求记录放入redis
+            redisStringOps.set(String.format(IDEMPOTENT_REDIS_KEY, sign), JSON.toJSONString(idempotentRequest), getRedisIdempotentSeconds(context.getIdempotentMinutes()), TimeUnit.SECONDS);
         } catch (Throwable e) {
             // 更新幂等记录的时候，已经调用完了正常业务逻辑，如果出现异常只打印log，不能影响正常业务逻辑
             log.error("####### fail when update idempotentRequest, idempotentRequest={}", idempotentRequest, e);
@@ -238,10 +245,10 @@ public class IdempotentServiceImpl implements IdempotentService {
     }
 
     /**
-     * 将有效期有分钟转化为秒
+     * 将有效期有分钟转化为秒(如果没启用数据库，则在redis里的时间使用业务的幂等有效期设置；否则在redis里的时间最大是DEFAULT_IDEMPOTENT_MINUTES * 60)
      */
     private Integer getRedisIdempotentSeconds(Integer idempotentMinutes) {
-        if (idempotentMinutes > 0 && idempotentMinutes < DEFAULT_IDEMPOTENT_MINUTES)
+        if ((idempotentMinutes > 0 && !dbEnabled) || (idempotentMinutes > 0 && idempotentMinutes < DEFAULT_IDEMPOTENT_MINUTES))
             return idempotentMinutes * 60;
         else
             return DEFAULT_IDEMPOTENT_MINUTES * 60;
